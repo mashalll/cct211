@@ -13,24 +13,6 @@ screen = pygame.display.set_mode((width, height))
 # colour constants
 BLACK = (0, 0, 0)
 
-# loading sprite images
-sprite_sheet_image = pygame.image.load('dino.png').convert_alpha()
-sprite_sheet = spritesheet.SpriteSheet(sprite_sheet_image)
-dinos = []
-dinosteps = [4, 6, 3, 4]
-action = 0
-t = pygame.time.get_ticks()
-cooldown = 100
-frame = 0
-count = 0
-
-for x in dinosteps:
-    temp = []
-    for i in range(x):
-        temp.append(sprite_sheet.get_image(count, 24, 24, 3, BLACK))
-        count += 1
-    dinos.append(temp)
-
 #set up the background image
 background = pygame.image.load('background.png')
 background = pygame.transform.scale(background,(width,height))
@@ -50,19 +32,83 @@ class Sprite(pygame.sprite.Sprite):
         screen.blit(self.image, self.rect)
 
 
+class Player(Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        # loading images
+        sprite_sheet_image = pygame.image.load('dino.png').convert_alpha()
+        sprite_sheet = spritesheet.SpriteSheet(sprite_sheet_image)
+
+        self.dinos = []
+        self.dinosteps = [4, 6, 3, 4]
+        self.action = 0
+        self.t = pygame.time.get_ticks()
+        self.cooldown = 100
+        self.frame = 1
+        self.count = 0
+        self.direction = True
+
+        for x in self.dinosteps:
+            temp = []
+            for i in range(x):
+                temp.append(sprite_sheet.get_image(self.count, 24, 24, 3, BLACK))
+                self.count += 1
+            self.dinos.append(temp)
+
+        self.image = self.dinos[0][0]
+        self.rect = self.image.get_rect()
+        self.rect.y = 330
+
+    def walk_animation(self):
+        # updating walking frames
+        curr = pygame.time.get_ticks()
+        if curr - self.t >= self.cooldown:
+            self.frame += 1
+            self.t = curr
+            if self.frame >= len(self.dinos):
+                self.frame = 0
+
+        # switching images based on direction
+        if self.direction:
+            self.image = self.dinos[self.action][self.frame]
+        else:
+            self.image = pygame.transform.flip(self.dinos[self.action][self.frame], True, False)
+
+    def update(self):
+        # moving the player in the direction they press
+        key = pygame.key.get_pressed()
+        if key[pygame.K_LEFT]:
+            self.rect.x -= 1
+            self.action = 1
+            self.direction = False
+            self.walk_animation()
+        elif key[pygame.K_RIGHT]:
+            self.rect.x += 1
+            self.action = 1
+            self.direction = True
+            self.walk_animation()
+        else:
+            self.action = 0
+            self.walk_animation()
+
+
 class Platform(Sprite):
     def __init__(self, startx, starty):
         super().__init__("boxAlt.png", startx, starty)
 
 
 def main():
-    global t, frame, action
     pygame.init()
     screen = pygame.display.set_mode((width,height))
     clock = pygame.time.Clock()
 
 
-    #all sprites will be addede here
+    #all sprites will be added here
+    player = Player()
+
+    players = pygame.sprite.Group()
+    players.add(player)
+
     platforms = pygame.sprite.Group()
 
     #platform coordinates
@@ -77,14 +123,7 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 done = False
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT and action > 0:
-                    action -= 1
-                    frame = 0
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RIGHT and action < len(dinos) - 1:
-                    action += 1
-                    frame = 0
+
 
         pygame.event.pump()
 
@@ -92,16 +131,8 @@ def main():
         screen.fill((0,0,0))
         screen.blit(background,(0,-1))
         platforms.draw(screen)
-
-        # loading player images
-        curr = pygame.time.get_ticks()
-        if curr - t >= cooldown:
-            frame += 1
-            t = curr
-            if frame >= len(dinos[action]):
-                frame = 0
-
-        screen.blit(dinos[action][frame], (0, 0))
+        player.draw(screen)
+        player.update()
 
         pygame.display.flip()
         platforms.update()
