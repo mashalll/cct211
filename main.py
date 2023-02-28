@@ -90,9 +90,30 @@ class Player(Sprite):
             self.change_y = 0
             self.rect.y = height - self.rect.height
 
-    def update(self):
+    def check_collision(self, boxes):
+        block_hit_list = pygame.sprite.spritecollide(self, boxes, False)
+        for block in block_hit_list:
+            if self.direction:
+                self.rect.right = block.rect.left
+            elif not self.direction:
+                # Otherwise if we are moving left, do the opposite.
+                self.rect.left = block.rect.right
+
+    def check_under(self, boxes):
+        block_hit_list = pygame.sprite.spritecollide(self, boxes, False)
+        for block in block_hit_list:
+            # Reset our position based on the top/bottom of the object.
+            if self.change_y > 0:
+                self.rect.bottom = block.rect.top
+            elif self.change_y < 0:
+                self.rect.top = block.rect.bottom
+            self.change_y = 0
+
+    def update(self, boxes):
         # moving the player in the direction they press
         self.calc_grav()
+        if self.change_y > 0:
+            self.check_under(boxes)
 
         key = pygame.key.get_pressed()
         if key[pygame.K_LEFT]:
@@ -100,11 +121,13 @@ class Player(Sprite):
             self.action = 1
             self.direction = False
             self.walk_animation()
+            self.check_collision(boxes)
         elif key[pygame.K_RIGHT]:
             self.rect.x += 1
             self.action = 1
             self.direction = True
             self.walk_animation()
+            self.check_collision(boxes)
         else:
             self.action = 0
             self.walk_animation()
@@ -155,7 +178,7 @@ def main():
         screen.blit(background,(0,-1))
         platforms.draw(screen)
         player.draw(screen)
-        player.update()
+        player.update(platforms)
 
         pygame.display.flip()
         platforms.update()
