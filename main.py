@@ -33,6 +33,8 @@ class Sprite(pygame.sprite.Sprite):
 
 
 class Player(Sprite):
+    change_y = 0
+
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
         # loading images
@@ -74,8 +76,24 @@ class Player(Sprite):
         else:
             self.image = pygame.transform.flip(self.dinos[self.action][self.frame], True, False)
 
+    def jump(self):
+        self.change_y = -10
+
+    def calc_grav(self):
+        if self.change_y == 0:
+            self.change_y = 1
+        else:
+            self.change_y += .35
+
+        # See if we are on the ground.
+        if self.rect.y >= height - self.rect.height and self.change_y >= 0:
+            self.change_y = 0
+            self.rect.y = height - self.rect.height
+
     def update(self):
         # moving the player in the direction they press
+        self.calc_grav()
+
         key = pygame.key.get_pressed()
         if key[pygame.K_LEFT]:
             self.rect.x -= 1
@@ -90,6 +108,8 @@ class Player(Sprite):
         else:
             self.action = 0
             self.walk_animation()
+
+        self.rect.y += self.change_y
 
 
 class Platform(Sprite):
@@ -123,6 +143,9 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 done = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    player.jump()
 
 
         pygame.event.pump()
@@ -142,3 +165,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
