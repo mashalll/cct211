@@ -1,4 +1,5 @@
 import pygame
+import numpy
 import spritesheet
 from pygame.locals import *
 
@@ -139,7 +140,20 @@ class Platform(Sprite):
     def __init__(self, startx, starty):
         super().__init__("boxAlt.png", startx, starty)
 
-
+class MovablePlatform(Platform):
+    def __init__(self, startx, starty, start, end, speed):
+        super().__init__(startx, starty)
+        self.start = start
+        self.end = end
+        self.speed = speed
+        self.direction = numpy.sign(end - start)
+    
+    def update(self):
+        self.rect.x += self.speed * self.direction
+        if self.rect.x <= self.start:
+            self.direction = numpy.sign(self.end - self.start)
+        elif self.rect.x >= self.end:
+            self.direction = numpy.sign(self.start - self.end)
 def main():
     pygame.init()
     screen = pygame.display.set_mode((width,height))
@@ -156,7 +170,7 @@ def main():
 
     #platform coordinates
     platforms.add(Platform(225, 365))
-
+    platforms.add(MovablePlatform(600, 250, 370, 600, 1))
 
 
     #Exits game
@@ -188,4 +202,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
