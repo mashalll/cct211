@@ -99,7 +99,7 @@ class Player(Sprite):
             elif not self.direction:
                 # Otherwise if we are moving left, do the opposite.
                 self.rect.left = block.rect.right
-
+                
     def check_under(self, boxes):
         block_hit_list = pygame.sprite.spritecollide(self, boxes, False)
         for block in block_hit_list:
@@ -109,7 +109,7 @@ class Player(Sprite):
             elif self.change_y < 0:
                 self.rect.top = block.rect.bottom
             self.change_y = 0
-
+            
     def update(self, boxes):
         # moving the player in the direction they press
         self.calc_grav()
@@ -136,9 +136,19 @@ class Player(Sprite):
         self.rect.y += self.change_y
 
 
+class Ledge (Sprite):
+    def __init__(self, startx, starty):
+        super().__init__("grassHalf.png", startx, starty)
+        
+class Lava (Sprite):
+    def __init__(self, startx, starty):
+        super().__init__("liquidLavaTop_mid.png", startx, starty)    
+
+
 class Platform(Sprite):
     def __init__(self, startx, starty):
         super().__init__("boxAlt.png", startx, starty)
+
 
 class MovablePlatform(Platform):
     def __init__(self, startx, starty, start, end, speed):
@@ -154,6 +164,8 @@ class MovablePlatform(Platform):
             self.direction = numpy.sign(self.end - self.start)
         elif self.rect.x >= self.end:
             self.direction = numpy.sign(self.start - self.end)
+
+
 def main():
     pygame.init()
     screen = pygame.display.set_mode((width,height))
@@ -167,11 +179,27 @@ def main():
     players.add(player)
 
     platforms = pygame.sprite.Group()
-
+    dangerZone = pygame.sprite.Group()
+    
+    
     #platform coordinates
     platforms.add(Platform(225, 365))
-    platforms.add(MovablePlatform(600, 250, 370, 600, 1))
-
+    platforms.add(Platform(295, 365))
+    platforms.add(Platform(365, 365))
+    platforms.add(Platform(365, 295))
+    platforms.add(Ledge(580, 170)) # PLACE COIN ABOVE THIS BLOCK
+    platforms.add(Platform(755,295))
+    
+    platforms.add(Platform(755,365))
+    
+    platforms.add(MovablePlatform(485, 295, 400, 650, 1))
+    
+    #add danger zones
+    dangerZone.add(Lava(435, 365))
+    dangerZone.add(Lava(505, 365))
+    dangerZone.add(Lava(575, 365))
+    dangerZone.add(Lava(645, 365))
+    dangerZone.add(Lava(715, 365))
 
     #Exits game
     done = True
@@ -190,12 +218,15 @@ def main():
         # Draw loop
         screen.fill((0,0,0))
         screen.blit(background,(0,-1))
+        dangerZone.draw(screen)
         platforms.draw(screen)
+        
         player.draw(screen)
         player.update(platforms)
 
         pygame.display.flip()
         platforms.update()
+        dangerZone.update()
         clock.tick(60)
     pygame.quit()
 
