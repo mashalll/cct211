@@ -135,6 +135,10 @@ class Player(Sprite):
 
         self.rect.y += self.change_y
 
+class Gem(Sprite):
+    def __init__(self, startx, starty):
+        super().__init__("gemBlue.png", startx, starty)
+   
 
 class Ledge (Sprite):
     def __init__(self, startx, starty):
@@ -180,6 +184,7 @@ def main():
 
     platforms = pygame.sprite.Group()
     dangerZone = pygame.sprite.Group()
+    gems = pygame.sprite.Group()
     
     
     #platform coordinates
@@ -201,6 +206,11 @@ def main():
     dangerZone.add(Lava(645, 365))
     dangerZone.add(Lava(715, 365))
 
+    #add gem placement 
+    gems.add(Gem(585, 115))
+    
+
+
     #Exits game
     done = True
 
@@ -220,13 +230,17 @@ def main():
         screen.blit(background,(0,-1))
         dangerZone.draw(screen)
         platforms.draw(screen)
+        gems.draw(screen)
         
         player.draw(screen)
         player.update(platforms)
+        
 
         pygame.display.flip()
         platforms.update()
         dangerZone.update()
+        gems.update()
+        
         clock.tick(60)
     pygame.quit()
 
