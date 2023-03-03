@@ -3,7 +3,7 @@
 # Dinosaur sprite: https://arks.itch.io/dino-characters
 # Block sprite: https://replit.com/talk/ask/Pygame-Sprite-Graphics/38044
 
-
+# imports
 import pygame
 import numpy
 import spritesheet
@@ -17,7 +17,6 @@ width = 1500
 height = 400
 
 screen = pygame.display.set_mode((width, height))
-
 bullets = pygame.sprite.Group()
 
 # colour constants
@@ -62,6 +61,7 @@ class Player(Sprite):
         self.background = pygame.image.load('background.png')
         self.background = pygame.transform.scale(self.background,(width,height))
 
+        # adding the frames of the player sprite to the dinos list 
         for x in self.dinosteps:
             temp = []
             for i in range(x):
@@ -69,12 +69,13 @@ class Player(Sprite):
                 self.count += 1
             self.dinos.append(temp)
 
+        # setting the initial player display
         self.image = self.dinos[0][0]
         self.rect = self.image.get_rect()
         self.rect.y = 330
 
     def walk_animation(self):
-        # updating walking frames
+        # updating the player's walking frames
         curr = pygame.time.get_ticks()
         if curr - self.t >= self.cooldown:
             self.frame += 1
@@ -91,13 +92,14 @@ class Player(Sprite):
     def jump(self):
         self.change_y = -10
 
+    # citation: https://q.utoronto.ca/courses/288975/files/24582167?module_item_id=4467158
     def calc_grav(self):
         if self.change_y == 0:
             self.change_y = 1
         else:
             self.change_y += .35
 
-        # See if we are on the ground.
+        # See if we are on the ground
         if self.rect.y >= height - self.rect.height and self.change_y >= 0:
             self.change_y = 0
             self.rect.y = height - self.rect.height
@@ -108,13 +110,13 @@ class Player(Sprite):
             if self.direction:
                 self.rect.right = block.rect.left
             elif not self.direction:
-                # Otherwise if we are moving left, do the opposite.
+                # Otherwise if we are moving left, do the opposite
                 self.rect.left = block.rect.right
 
     def check_under(self, boxes):
         block_hit_list = pygame.sprite.spritecollide(self, boxes, False)
         for block in block_hit_list:
-            # Reset our position based on the top/bottom of the object.
+            # Reset our position based on the top/bottom of the object
             if self.change_y > 0:
                 self.rect.bottom = block.rect.top
             elif self.change_y < 0:
@@ -122,11 +124,11 @@ class Player(Sprite):
             self.change_y = 0
 
     def update(self, boxes):
-        # moving the player in the direction they press
         self.calc_grav()
         if self.change_y > 0:
             self.check_under(boxes)
 
+        # moving the player in the direction they press
         key = pygame.key.get_pressed()
         if key[pygame.K_LEFT]:
             self.rect.x -= 5
@@ -146,7 +148,7 @@ class Player(Sprite):
 
         self.rect.y += self.change_y
 
-        # change background
+        # change background and increasing bullets once the player crosses the end
         if self.rect.x > 1400:
             if self.bg:
                 self.bg = False
@@ -165,17 +167,18 @@ class Player(Sprite):
 class Enemy(Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
+        # loading images
         player_img = pygame.image.load("enemy.png").convert_alpha()
         self.image = pygame.transform.scale(player_img, (100, 100))
         self.image.set_colorkey(BLACK)
         self.rect = self.image.get_rect()
         self.radius = 20
-        # pygame.draw.circle(self.image, RED, self.rect.center, self.radius)
         self.rect.x = 1400
         self.rect.y = 100
         self.speedy = 3
 
     def update(self, player):
+        # moving the enemy from the bottom to the top of the screen
         self.rect.y += self.speedy
         if self.rect.y >= 350 or self.rect.y < 50:
             self.speedy = -self.speedy
@@ -183,6 +186,7 @@ class Enemy(Sprite):
         bullets.update()
 
     def shoot(self, player):
+        # creating more bullets based on how many times the player crossed the screen
         while player.bullets >= len(bullets):
             b = Bullet(self.rect.x, random.randint(self.rect.top, self.rect.bottom))
             bullets.add(b)
@@ -191,12 +195,14 @@ class Enemy(Sprite):
 class Bullet(Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
+        # loading images and setting start position
         self.image = pygame.image.load("laser.png").convert_alpha()
         self.rect = self.image.get_rect()
         self.rect.y = y
         self.rect.x = x
 
     def update(self):
+        # moving the bullet towards the player, killing it if it goes off screen
         self.rect.x -= 3
         if self.rect.x < 0:
             self.kill()
