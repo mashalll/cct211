@@ -1,5 +1,8 @@
 import pygame
 
+# This class gets the desired sprite images from the sprite sheet
+# Credits: https://www.youtube.com/watch?v=nXOVcOBqFwM&ab_channel=CodingWithRuss
+
 class SpriteSheet():
     def __init__(self, image):
         self.sheet = image
