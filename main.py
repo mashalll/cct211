@@ -192,8 +192,26 @@ def main():
     platforms.add(Platform(295, 365))
     platforms.add(Platform(365, 365))
     platforms.add(Platform(365, 295))
-    platforms.add(Ledge(580, 170)) # PLACE COIN ABOVE THIS BLOCK
+    platforms.add(Ledge(580, 170)) 
     platforms.add(Platform(755,295))
+    
+    #Left wall border
+    platforms.add(Platform(-50, 365))
+    platforms.add(Platform(-50, 295))
+    platforms.add(Platform(-50, 225))
+    platforms.add(Platform(-50, 155))
+    platforms.add(Platform(-50, 85))
+    platforms.add(Platform(-50, 15))
+    
+    #Right wall border
+    platforms.add(Platform(1535,0))
+    platforms.add(Platform(1535,70))
+    platforms.add(Platform(1535,140))
+    platforms.add(Platform(1535,210))
+    platforms.add(Platform(1535,280))
+    platforms.add(Platform(1535,350))
+    platforms.add(Platform(1535,420))    
+    
     
     platforms.add(Platform(755,365))
     
