@@ -1,6 +1,13 @@
+# Image Credits
+# Bullet and Spaceship sprite: https://q.utoronto.ca/courses/288975/files/24417060?module_item_id=4444455
+# Dinosaur sprite: https://arks.itch.io/dino-characters
+# Block sprite: https://replit.com/talk/ask/Pygame-Sprite-Graphics/38044
+
+
 import pygame
 import numpy
 import spritesheet
+import random
 from pygame.locals import *
 
 pygame.init()
@@ -11,14 +18,11 @@ height = 400
 
 screen = pygame.display.set_mode((width, height))
 
+bullets = pygame.sprite.Group()
+
 # colour constants
 BLACK = (0, 0, 0)
 clear = (0, 0, 0, 0)
-
-#set up the background image
-background = pygame.image.load('background.png')
-background = pygame.transform.scale(background,(width,height))
-
 
 class Sprite(pygame.sprite.Sprite):
     def __init__(self, image, startx, starty):
@@ -51,6 +55,12 @@ class Player(Sprite):
         self.frame = 1
         self.count = 0
         self.direction = True
+        self.bg = True
+        self.bullets = 0
+
+        #set up the background image
+        self.background = pygame.image.load('background.png')
+        self.background = pygame.transform.scale(self.background,(width,height))
 
         for x in self.dinosteps:
             temp = []
@@ -100,7 +110,7 @@ class Player(Sprite):
             elif not self.direction:
                 # Otherwise if we are moving left, do the opposite.
                 self.rect.left = block.rect.right
-                
+
     def check_under(self, boxes):
         block_hit_list = pygame.sprite.spritecollide(self, boxes, False)
         for block in block_hit_list:
@@ -110,7 +120,7 @@ class Player(Sprite):
             elif self.change_y < 0:
                 self.rect.top = block.rect.bottom
             self.change_y = 0
-            
+
     def update(self, boxes):
         # moving the player in the direction they press
         self.calc_grav()
@@ -119,13 +129,13 @@ class Player(Sprite):
 
         key = pygame.key.get_pressed()
         if key[pygame.K_LEFT]:
-            self.rect.x -= 1
+            self.rect.x -= 5
             self.action = 1
             self.direction = False
             self.walk_animation()
             self.check_collision(boxes)
         elif key[pygame.K_RIGHT]:
-            self.rect.x += 1
+            self.rect.x += 5
             self.action = 1
             self.direction = True
             self.walk_animation()
@@ -136,18 +146,73 @@ class Player(Sprite):
 
         self.rect.y += self.change_y
 
+        # change background
+        if self.rect.x > 1400:
+            if self.bg:
+                self.bg = False
+                self.background = pygame.image.load('background_01.png')
+                self.background = pygame.transform.scale(self.background,(width,height))
+                self.rect.x = 0
+                self.bullets += 2
+            else:
+                self.bg = True
+                self.background = pygame.image.load('background.png')
+                self.background = pygame.transform.scale(self.background,(width,height))
+                self.rect.x = 0
+                self.bullets += 2
+
+
+class Enemy(Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        player_img = pygame.image.load("enemy.png").convert_alpha()
+        self.image = pygame.transform.scale(player_img, (100, 100))
+        self.image.set_colorkey(BLACK)
+        self.rect = self.image.get_rect()
+        self.radius = 20
+        # pygame.draw.circle(self.image, RED, self.rect.center, self.radius)
+        self.rect.x = 1400
+        self.rect.y = 100
+        self.speedy = 3
+
+    def update(self, player):
+        self.rect.y += self.speedy
+        if self.rect.y >= 350 or self.rect.y < 50:
+            self.speedy = -self.speedy
+        self.shoot(player)
+        bullets.update()
+
+    def shoot(self, player):
+        while player.bullets >= len(bullets):
+            b = Bullet(self.rect.x, random.randint(self.rect.top, self.rect.bottom))
+            bullets.add(b)
+
+
+class Bullet(Sprite):
+    def __init__(self, x, y):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load("laser.png").convert_alpha()
+        self.rect = self.image.get_rect()
+        self.rect.y = y
+        self.rect.x = x
+
+    def update(self):
+        self.rect.x -= 3
+        if self.rect.x < 0:
+            self.kill()
+
 class Gem(Sprite):
     def __init__(self, startx, starty):
         super().__init__("gemBlue.png", startx, starty)
-   
+
 
 class Ledge (Sprite):
     def __init__(self, startx, starty):
         super().__init__("grassHalf.png", startx, starty)
-        
+
 class Lava (Sprite):
     def __init__(self, startx, starty):
-        super().__init__("liquidLavaTop_mid.png", startx, starty)    
+        super().__init__("liquidLavaTop_mid.png", startx, starty)
 
 
 class Platform(Sprite):
@@ -162,7 +227,7 @@ class MovablePlatform(Platform):
         self.end = end
         self.speed = speed
         self.direction = numpy.sign(end - start)
-    
+
     def update(self):
         self.rect.x += self.speed * self.direction
         if self.rect.x <= self.start:
@@ -183,19 +248,23 @@ def main():
     players = pygame.sprite.Group()
     players.add(player)
 
+    enemies = pygame.sprite.Group()
+    enemy = Enemy()
+    enemies.add(enemy)
+
     platforms = pygame.sprite.Group()
     dangerZone = pygame.sprite.Group()
     gems = pygame.sprite.Group()
-    
-    
+
+
     #platform coordinates
     platforms.add(Platform(225, 365))
     platforms.add(Platform(295, 365))
     platforms.add(Platform(365, 365))
     platforms.add(Platform(365, 295))
-    platforms.add(Ledge(580, 170)) 
+    platforms.add(Ledge(580, 170))
     platforms.add(Platform(755,295))
-    
+
     #Left wall border
     platforms.add(Platform(-50, 365))
     platforms.add(Platform(-50, 295))
@@ -203,7 +272,7 @@ def main():
     platforms.add(Platform(-50, 155))
     platforms.add(Platform(-50, 85))
     platforms.add(Platform(-50, 15))
-    
+
     #Right wall border
     platforms.add(Platform(1535,0))
     platforms.add(Platform(1535,70))
@@ -211,13 +280,13 @@ def main():
     platforms.add(Platform(1535,210))
     platforms.add(Platform(1535,280))
     platforms.add(Platform(1535,350))
-    platforms.add(Platform(1535,420))    
-    
-    
+    platforms.add(Platform(1535,420))
+
+
     platforms.add(Platform(755,365))
-    
+
     platforms.add(MovablePlatform(485, 295, 400, 650, 1))
-    
+
     #add danger zones
     dangerZone.add(Lava(435, 365))
     dangerZone.add(Lava(505, 365))
@@ -225,9 +294,8 @@ def main():
     dangerZone.add(Lava(645, 365))
     dangerZone.add(Lava(715, 365))
 
-    #add gem placement 
+    #add gem placement
     gems.add(Gem(585, 115))
-    
 
 
     #Exits game
@@ -246,38 +314,51 @@ def main():
 
         # Draw loop
         screen.fill((0,0,0))
-        screen.blit(background,(0,-1))
-        
+        screen.blit(player.background,(0,-1))
+
         for gem in gems:
             gem.draw(screen)
-            
+
             for i in range(len(gems)):
                 if player.rect.colliderect(gem.rect):
                     gem.image.fill(clear)
-                           
-        
+
         for lava in dangerZone:
             dangerZone.draw(screen)
-            
+
             for i in range(len(dangerZone)):
                 if player.rect.colliderect(lava.rect):
                     done = False
-                      
-        
+
+        for enemy in enemies:
+            enemy.draw(screen)
+            for i in range(len(enemies)):
+                if player.rect.colliderect(enemy.rect):
+                    done = False
+
+        for b in bullets:
+            b.draw(screen)
+            for i in range(len(bullets)):
+                if player.rect.colliderect(b.rect):
+                    done = False
+
+
         platforms.draw(screen)
-        
+
         player.draw(screen)
         player.update(platforms)
-        
+
 
         pygame.display.flip()
         platforms.update()
         dangerZone.update()
         gems.update()
-        
+        enemies.update(player)
+
         clock.tick(60)
     pygame.quit()
 
 
 if __name__ == "__main__":
     main()
+
