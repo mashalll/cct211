@@ -13,6 +13,7 @@ screen = pygame.display.set_mode((width, height))
 
 # colour constants
 BLACK = (0, 0, 0)
+clear = (0, 0, 0, 0)
 
 #set up the background image
 background = pygame.image.load('background.png')
@@ -246,9 +247,24 @@ def main():
         # Draw loop
         screen.fill((0,0,0))
         screen.blit(background,(0,-1))
-        dangerZone.draw(screen)
+        
+        for gem in gems:
+            gem.draw(screen)
+            
+            for i in range(len(gems)):
+                if player.rect.colliderect(gem.rect):
+                    gem.image.fill(clear)
+                           
+        
+        for lava in dangerZone:
+            dangerZone.draw(screen)
+            
+            for i in range(len(dangerZone)):
+                if player.rect.colliderect(lava.rect):
+                    done = False
+                      
+        
         platforms.draw(screen)
-        gems.draw(screen)
         
         player.draw(screen)
         player.update(platforms)
