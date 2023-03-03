@@ -2,6 +2,7 @@
 # Bullet and Spaceship sprite: https://q.utoronto.ca/courses/288975/files/24417060?module_item_id=4444455
 # Dinosaur sprite: https://arks.itch.io/dino-characters
 # Block sprite: https://replit.com/talk/ask/Pygame-Sprite-Graphics/38044
+# Gem, Box, Half platform: https://opengameart.org/content/platformer-art-deluxe
 
 # imports
 import pygame
